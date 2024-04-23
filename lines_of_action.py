@@ -299,8 +299,17 @@ class LinesOfAction:
             rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
             rect.setFill("greenyellow")
             rect.draw(self.win)
+            if self.board.grid[row][col] != "":
+                color_type = self.board.grid[row][col]
+                if color_type == "X":
+                    color = "black"
+                else:
+                    color = "white"
+                circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
+                circle.setFill(color)
+                circle.draw(self.win)
     
-    def select_piece(self, row: int, col: int):
+    def select_piece(self, row: int, col: int, moves: list[tuple]):
         rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
         rect.setFill("palegreen")
         rect.draw(self.win)
@@ -312,9 +321,40 @@ class LinesOfAction:
         circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
         circle.setFill(color)
         circle.draw(self.win)
-        moves = self.find_moves(row, col)
+        #moves = self.find_moves(row, col)
         self.show_moves(moves)
     
+    def unselect_piece(self, row: int, col: int, moves: list[tuple]):
+        rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
+        rect.setFill("mediumseagreen")
+        rect.draw(self.win)
+        color_type = self.board.grid[row][col]
+        if color_type == "X":
+            color = "black"
+        else:
+            color = "white"
+        circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
+        circle.setFill(color)
+        circle.draw(self.win)
+        #moves = self.find_moves(row, col)
+        length = len(moves)
+        for i in range(length):
+            row = moves[i][0]
+            col = moves[i][1]
+            rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
+            rect.setFill("mediumseagreen")
+            rect.draw(self.win)
+            if self.board.grid[row][col] != "":
+                color_type = self.board.grid[row][col]
+                if color_type == "X":
+                    color = "black"
+                else:
+                    color = "white"
+                circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
+                circle.setFill(color)
+                circle.draw(self.win)
+        
+
     def play_game(self):
         game_running = True
         while game_running:
@@ -322,8 +362,13 @@ class LinesOfAction:
                 click = self.win.getMouse()
                 row = int(click.getY())
                 col = int(click.getX())
-                if self.board.grid[row][col] == "X":
-                    self.select_piece(row, col)
+                while self.board.grid[row][col] == "X":
+                    moves = self.find_moves(row, col)
+                    self.select_piece(row, col, moves)
+                    click = self.win.getMouse()
+                    self.unselect_piece(row, col, moves)
+                    row = int(click.getY())
+                    col = int(click.getX())
         
     
         
