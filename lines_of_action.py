@@ -2,21 +2,6 @@ __author__ = "Ellen Whalen"
 
 import graphics as g
 
-# LinesOfAction class:
-# - check_board (for game ending)
-# - start_turn
-# - end_round - could be a variable? (diff from turn. 2 turns per round - 1 per player)
-#
-# Grid class:
-# - initialize_grid
-# - draw_grid
-# - find_moves
-# - show_moves
-# - move_piece
-# - capture_piece
-#
-# Graphics display: 8x8 grid, maybe include a "lock in" button ? 
-
 class Board:
     
     def __init__(self):
@@ -66,7 +51,7 @@ class Board:
 
         i = row
         j = col
-        while i < DIM and j > 0:
+        while i < DIM - 1 and j > 0:
             # getting i and j to the "start" of the diagonal running from L-bottom to R-top (+x direction)
             i += 1
             j -= 1
@@ -120,13 +105,193 @@ class LinesOfAction:
                     circle = g.Circle(g.Point(j + 0.5, i + 0.5), 0.25)
                     circle.setFill("white")
                     circle.draw(self.win)
-        self.win.getMouse()
+    def find_moves(self, row: int, col: int) -> list[tuple]:
+        color = self.board.grid[row][col]
+        if color == "X":
+            opponent = "O"
+        else:
+            opponent = "X"
+        counts = self.board.count_pieces(row, col)
+        moves = []
+        moves += self.find_row_moves(row, col, color, opponent, counts["row_count"])
+        moves += self.find_col_moves(row, col, color, opponent, counts["col_count"])
+        moves += self.find_neg_diag_moves(row, col, color, opponent, counts["neg_diag_count"])
+        moves += self.find_pos_diag_moves(row, col, color, opponent, counts["pos_diag_count"])
+        return moves
     
+    def find_row_moves(self, row: int, col: int, color: str, opponent: str, count: int) -> list[tuple]:
+        moves = []
+
+        can_move = True
+        i = 1
+        col_check = col + 1
+        while col_check < DIM and i < count and can_move:
+            if self.board.grid[row][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check += 1
+
+        # lots of logic that gets repeated, so i'll explain it once here.
+        # if the loop was able to get all the way to the distance the piece would need to travel,
+        if i == count:    
+            # if the reason the while loop ended WASN'T because col_check overspills bounds,
+            if col_check < DIM:     
+                # if the spot the piece would land on is the same color as itself,
+                if self.board.grid[row][col_check] == color:
+                    can_move = False    # the piece can't move there.
+            # otherwise if col_check DID overspill bounds,
+            else:   
+                can_move = False    # the piece can't move there. (obviously)
+            # if the piece can STILL move,
+            if can_move == True:
+                moves += [(row, col_check)]
+        
+        can_move = True
+        i = 1
+        col_check = col - 1
+        while col_check > 0 and i < count and can_move:
+            if self.board.grid[row][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check -= 1
+
+        if i == count:
+            if col_check >= 0:
+                if self.board.grid[row][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move == True:
+                moves += [(row, col_check)]
+        return moves
     
+    def find_col_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        moves = []
+        can_move = True
+        i = 1
+        row_check = row + 1
+        while row_check < DIM and i < count and can_move:
+            if self.board.grid[row_check][col] == opponent:
+                can_move = False
+            i += 1
+            row_check += 1
 
+        if i == count:
+            if row_check < DIM:
+                if self.board.grid[row_check][col] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move == True:
+                moves += [(row_check, col)]
+        
+        can_move = True
+        i = 1
+        row_check = row - 1
+        while row_check > 0 and i < count and can_move:
+            if self.board.grid[row_check][col] == opponent:
+                can_move = False
+            i += 1
+            row_check -= 1
+        
+        if i == count:
+            if row_check >= 0:
+                if self.board.grid[row_check][col] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move == True:
+                moves += [(row_check, col)]
+        return moves
+    
+    def find_neg_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        moves = []
+        can_move = True
+        i = 1
+        col_check = col + 1
+        row_check = row + 1
+        while col_check < DIM and row_check < DIM and i < count and can_move:
+            if self.board.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check += 1
+            row_check += 1
 
+        if i == count:
+            if col_check < DIM and row_check < DIM:
+                if self.board.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move == True:
+                moves += [(row_check, col_check)]
+        
+        can_move = True
+        i = 1
+        col_check = col - 1
+        row_check = row - 1
+        while col_check > 0 and row_check > 0 and i < count and can_move:
+            if self.board.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check -= 1
+            row_check -= 1
+        
+        if i == count:
+            if col_check >= 0 and row_check >= 0:
+                if self.board.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move == True:
+                moves += [(row_check, col_check)]
+        return moves
+    
+    def find_pos_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        moves = []
+        can_move = True
+        i = 1
+        col_check = col + 1
+        row_check = row - 1
+        while col_check < DIM and row_check > 0 and i < count and can_move:
+            if self.board.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check += 1
+            row_check -= 1
 
+        if i == count:
+            if col_check < DIM and row_check >= 0:
+                if self.board.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move == True:
+                moves += [(row_check, col_check)]
+        
+        can_move = True
+        i = 1
+        col_check = col - 1
+        row_check = row + 1
+        while col_check > 0 and row_check < DIM and i < count and can_move:
+            if self.board.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check -= 1
+            row_check += 1
+        
+        if i == count:
+            if col_check >= 0 and row_check < DIM:
+                if self.board.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move == True:
+                moves += [(row_check, col_check)]
+        return moves
 
+        
+    
         
 DIM = 8
 
@@ -134,4 +299,7 @@ my_board = Board()
 print(my_board.count_pieces(4, 0))
 
 my_game = LinesOfAction()
+print(my_game.find_moves(4, 0))
 my_game.draw_board()
+my_game.win.getMouse()
+my_game.win.close()
