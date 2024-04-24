@@ -1,6 +1,7 @@
 __author__ = "Ellen Whalen"
 
 import graphics as g
+from box import Box
 
 class Board:
     
@@ -460,10 +461,57 @@ class LinesOfAction:
                 self.check_board()
         
     def check_board(self):
+        x_win = False
+        o_win = False
         x_count = self.board.count_x()
-        y_count = self.board.count_o()
+        o_count = self.board.count_o()
+        # search for an x and an o on the board. we only need to search for two.
+        i = 0
+        searching = True
+        while i < DIM and searching:
+            j = 0
+            while j < DIM and searching:
+                if self.board.grid[i][j] == "X":
+                    x_vertex = (i, j)
+                    searching = False
+                j += 1
+            i += 1
         
-        #print(str(x_count) + str(y_count))
+        i = 0
+        searching = True
+        while i < DIM and searching:
+            j = 0
+            while j < DIM and searching:
+                if self.board.grid[i][j] == "O":
+                    o_vertex = (i, j)
+                    searching = False
+                j += 1
+            i += 1
+
+        x_visited = []
+        o_visited = []
+        self.dfs(x_vertex, x_visited)
+        self.dfs(o_vertex, o_visited)
+        print(x_visited)
+        print(o_visited)
+
+        if len(x_visited) == x_count:
+            x_win = True
+        if len(o_visited) == o_count:
+            o_win = True
+        print(x_win)
+        print(o_win)
+
+    def dfs(self, vertex: tuple, visited: list):
+        if vertex not in visited:
+            visited.append(vertex)
+            box = Box(vertex[0], vertex[1], DIM)
+            for i in box.row_range():
+                for j in box.col_range():
+                    if self.board.grid[i][j] == self.board.grid[vertex[0]][vertex[1]]:
+                        self.dfs((i, j), visited)
+
+        
 
 DIM = 8
 
@@ -471,6 +519,9 @@ my_board = Board()
 print(my_board.count_pieces(4, 0))
 
 my_game = LinesOfAction()
+#visited = []
+#my_game.dfs((1, 0), visited)
+#print(visited)
 my_game.play_game()
 my_game.win.getMouse()
 my_game.win.close()
