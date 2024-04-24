@@ -19,6 +19,7 @@ class Board:
         return self._grid
     
     def count_pieces(self, row: int, col: int) -> dict:
+        """Counts the number of pieces on a given piece's row, column, and both diagonals."""
         if self.grid[row][col] == "":
             raise ValueError("count_pieces should not be run on an empty square.")
         counts = {"row_count": 0,
@@ -63,11 +64,28 @@ class Board:
         return counts
 
     def move_piece(self, row: int, col: int, new_row: int, new_col: int):
+        """Moves a piece from [row][col] to [new_row][new_col]."""
+        if self.grid[row][col] == "":
+            raise ValueError("Can't move a piece that doesn't exist.")
         color_type = self._grid[row][col]
         self._grid[row][col] = ""
         self._grid[new_row][new_col] = color_type
-        print(self._grid)
     
+    def count_x(self) -> int:
+        count = 0
+        for i in range(DIM):
+            for j in range(DIM):
+                if self.grid[j][i] == "X":
+                    count += 1
+        return count
+    
+    def count_o(self) -> int:
+        count = 0
+        for i in range(DIM):
+            for j in range(DIM):
+                if self.grid[j][i] == "O":
+                    count += 1
+        return count
 
 class LinesOfAction:
     _is_black_turn: bool
@@ -77,7 +95,7 @@ class LinesOfAction:
     def __init__(self):
         self._is_black_turn = True
         self._board = Board()
-        self._win = g.GraphWin("Lines of Action", 800, 800)
+        self._win = g.GraphWin("Lines of Action", 800, 800, autoflush=False)
         self._win.setBackground("mediumseagreen")
         self._win.setCoords(0, DIM, DIM, 0)
 
@@ -94,6 +112,7 @@ class LinesOfAction:
         return self._win
     
     def draw_board(self):
+        """Draws the board in its initial state."""
         for i in range(DIM):
             line = g.Line(g.Point(0, i), g.Point(DIM, i))
             line.draw(self.win)
@@ -109,8 +128,10 @@ class LinesOfAction:
                     circle = g.Circle(g.Point(j + 0.5, i + 0.5), 0.25)
                     circle.setFill("white")
                     circle.draw(self.win)
+        self.win.update()
 
     def find_moves(self, row: int, col: int) -> list[tuple]:
+        """Finds possible moves for a piece and returns them as a list of tuples (row, col)."""
         color = self.board.grid[row][col]
         if color == "X":
             opponent = "O"
@@ -125,6 +146,7 @@ class LinesOfAction:
         return moves
     
     def find_row_moves(self, row: int, col: int, color: str, opponent: str, count: int) -> list[tuple]:
+        """Finds possible moves for a piece along its row."""
         moves = []
 
         can_move = True
@@ -171,6 +193,7 @@ class LinesOfAction:
         return moves
     
     def find_col_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        """Finds possible moves for a piece along its column."""
         moves = []
         can_move = True
         i = 1
@@ -210,6 +233,7 @@ class LinesOfAction:
         return moves
     
     def find_neg_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        """Finds possible moves for a piece along its diagonal going from the upper left to lower right."""
         moves = []
         can_move = True
         i = 1
@@ -253,6 +277,7 @@ class LinesOfAction:
         return moves
     
     def find_pos_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        """Finds possible moves for a piece along the diagonal going from its lower left to upper right."""
         moves = []
         can_move = True
         i = 1
@@ -296,11 +321,12 @@ class LinesOfAction:
         return moves
 
     def show_possible_moves(self, moves: list[tuple]):
+        """Displays possible moves as light green squares."""
         length = len(moves)
         for i in range(length):
             row = moves[i][0]
             col = moves[i][1]
-            rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
+            rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
             rect.setFill("greenyellow")
             rect.draw(self.win)
             if self.board.grid[row][col] != "":
@@ -312,9 +338,11 @@ class LinesOfAction:
                 circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
                 circle.setFill(color)
                 circle.draw(self.win)
+        self.win.update()
     
     def select_piece(self, row: int, col: int, moves: list[tuple]):
-        rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
+        """Selects a piece, calculates its possible moves and displays them."""
+        rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
         rect.setFill("palegreen")
         rect.draw(self.win)
         color_type = self.board.grid[row][col]
@@ -326,9 +354,11 @@ class LinesOfAction:
         circle.setFill(color)
         circle.draw(self.win)
         self.show_possible_moves(moves)
+        self.win.update()
     
     def unselect_piece(self, row: int, col: int, moves: list[tuple]):
-        rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
+        """Deselects a piece which has previously been selected."""
+        rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
         rect.setFill("mediumseagreen")
         rect.draw(self.win)
         color_type = self.board.grid[row][col]
@@ -354,9 +384,11 @@ class LinesOfAction:
                     color = "white"
                 circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
                 circle.setFill(color)
-                circle.draw(self.win)      
+                circle.draw(self.win)   
+        self.win.update()
 
     def show_move(self):
+        """Called after a piece is moved. Updates the board to show that move."""
         for i in range(DIM):
             for j in range(DIM):
                 if self.board.grid[i][j] == "X":
@@ -371,11 +403,13 @@ class LinesOfAction:
                     rect = g.Rectangle(g.Point(j + 1, i + 1), g.Point(j, i))
                     rect.setFill("mediumseagreen")
                     rect.draw(self.win)
+        self.win.update()
 
     def play_game(self):
         self.draw_board()
         game_running = True
         while game_running:
+            round = True
             if self.is_black_turn:
                 click = self.win.getMouse()
                 row = int(click.getY())
@@ -420,17 +454,23 @@ class LinesOfAction:
                         self.show_move()
                         has_not_moved = False
                         self._is_black_turn = True
+                        round = False
                     i += 1
+            if not round:
+                self.check_board()
         
-    
+    def check_board(self):
+        x_count = self.board.count_x()
+        y_count = self.board.count_o()
         
+        #print(str(x_count) + str(y_count))
+
 DIM = 8
 
 my_board = Board()
 print(my_board.count_pieces(4, 0))
 
 my_game = LinesOfAction()
-#my_game.draw_board()
 my_game.play_game()
 my_game.win.getMouse()
 my_game.win.close()
