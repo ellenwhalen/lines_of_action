@@ -62,7 +62,11 @@ class Board:
             j += 1
         return counts
 
-
+    def move_piece(self, row: int, col: int, new_row: int, new_col: int):
+        color_type = self._grid[row][col]
+        self._grid[row][col] = ""
+        self._grid[new_row][new_col] = color_type
+        print(self._grid)
     
 
 class LinesOfAction:
@@ -291,7 +295,7 @@ class LinesOfAction:
                 moves += [(row_check, col_check)]
         return moves
 
-    def show_moves(self, moves: list[tuple]):
+    def show_possible_moves(self, moves: list[tuple]):
         length = len(moves)
         for i in range(length):
             row = moves[i][0]
@@ -321,8 +325,7 @@ class LinesOfAction:
         circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
         circle.setFill(color)
         circle.draw(self.win)
-        #moves = self.find_moves(row, col)
-        self.show_moves(moves)
+        self.show_possible_moves(moves)
     
     def unselect_piece(self, row: int, col: int, moves: list[tuple]):
         rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
@@ -336,7 +339,6 @@ class LinesOfAction:
         circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
         circle.setFill(color)
         circle.draw(self.win)
-        #moves = self.find_moves(row, col)
         length = len(moves)
         for i in range(length):
             row = moves[i][0]
@@ -352,10 +354,26 @@ class LinesOfAction:
                     color = "white"
                 circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
                 circle.setFill(color)
-                circle.draw(self.win)
-        
+                circle.draw(self.win)      
+
+    def show_move(self):
+        for i in range(DIM):
+            for j in range(DIM):
+                if self.board.grid[i][j] == "X":
+                    circle = g.Circle(g.Point(j + 0.5, i + 0.5), 0.25)
+                    circle.setFill("black")
+                    circle.draw(self.win)
+                elif self.board.grid[i][j] == "O":
+                    circle = g.Circle(g.Point(j + 0.5, i + 0.5), 0.25)
+                    circle.setFill("white")
+                    circle.draw(self.win)
+                else:
+                    rect = g.Rectangle(g.Point(j + 1, i + 1), g.Point(j, i))
+                    rect.setFill("mediumseagreen")
+                    rect.draw(self.win)
 
     def play_game(self):
+        self.draw_board()
         game_running = True
         while game_running:
             if self.is_black_turn:
@@ -365,10 +383,44 @@ class LinesOfAction:
                 while self.board.grid[row][col] == "X":
                     moves = self.find_moves(row, col)
                     self.select_piece(row, col, moves)
+                    x_selected = (row, col)
                     click = self.win.getMouse()
                     self.unselect_piece(row, col, moves)
                     row = int(click.getY())
                     col = int(click.getX())
+                possible_move = (row, col)
+                i = 0
+                has_not_moved = True
+                while i < len(moves) and has_not_moved:
+                    if possible_move == moves[i]:
+                        self.board.move_piece(x_selected[0], x_selected[1], moves[i][0], moves[i][1])
+                        self.show_move()
+                        has_not_moved = False
+                        self._is_black_turn = False
+                    i += 1
+            
+            if not self.is_black_turn:
+                click = self.win.getMouse()
+                row = int(click.getY())
+                col = int(click.getX())
+                while self.board.grid[row][col] == "O":
+                    moves = self.find_moves(row, col)
+                    self.select_piece(row, col, moves)
+                    o_selected = (row, col)
+                    click = self.win.getMouse()
+                    self.unselect_piece(row, col, moves)
+                    row = int(click.getY())
+                    col = int(click.getX())
+                possible_move = (row, col)
+                i = 0
+                has_not_moved = True
+                while i < len(moves) and has_not_moved:
+                    if possible_move == moves[i]:
+                        self.board.move_piece(o_selected[0], o_selected[1], moves[i][0], moves[i][1])
+                        self.show_move()
+                        has_not_moved = False
+                        self._is_black_turn = True
+                    i += 1
         
     
         
@@ -378,7 +430,7 @@ my_board = Board()
 print(my_board.count_pieces(4, 0))
 
 my_game = LinesOfAction()
-my_game.draw_board()
+#my_game.draw_board()
 my_game.play_game()
 my_game.win.getMouse()
 my_game.win.close()
