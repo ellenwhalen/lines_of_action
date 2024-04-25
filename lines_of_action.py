@@ -90,11 +90,13 @@ class Board:
 
 class LinesOfAction:
     _is_black_turn: bool
+    _round: bool
     _board: Board
     _win: g.GraphWin
 
     def __init__(self):
         self._is_black_turn = True
+        self._round = True
         self._board = Board()
         self._win = g.GraphWin("Lines of Action", 800, 800, autoflush=False)
         self._win.setBackground("mediumseagreen")
@@ -409,56 +411,61 @@ class LinesOfAction:
     def play_game(self):
         self.draw_board()
         game_running = True
+        #moves = []
         while game_running:
-            round = True
+            self._round = True
             if self.is_black_turn:
-                click = self.win.getMouse()
-                row = int(click.getY())
-                col = int(click.getX())
-                while self.board.grid[row][col] == "X":
-                    moves = self.find_moves(row, col)
-                    self.select_piece(row, col, moves)
-                    x_selected = (row, col)
-                    click = self.win.getMouse()
-                    self.unselect_piece(row, col, moves)
-                    row = int(click.getY())
-                    col = int(click.getX())
-                possible_move = (row, col)
-                i = 0
-                has_not_moved = True
-                while i < len(moves) and has_not_moved:
-                    if possible_move == moves[i]:
-                        self.board.move_piece(x_selected[0], x_selected[1], moves[i][0], moves[i][1])
-                        self.show_move()
-                        has_not_moved = False
-                        self._is_black_turn = False
-                    i += 1
-            
+                self.take_turn("X")
+
             if not self.is_black_turn:
-                click = self.win.getMouse()
-                row = int(click.getY())
-                col = int(click.getX())
-                while self.board.grid[row][col] == "O":
-                    moves = self.find_moves(row, col)
-                    self.select_piece(row, col, moves)
-                    o_selected = (row, col)
-                    click = self.win.getMouse()
-                    self.unselect_piece(row, col, moves)
-                    row = int(click.getY())
-                    col = int(click.getX())
-                possible_move = (row, col)
-                i = 0
-                has_not_moved = True
-                while i < len(moves) and has_not_moved:
-                    if possible_move == moves[i]:
-                        self.board.move_piece(o_selected[0], o_selected[1], moves[i][0], moves[i][1])
-                        self.show_move()
-                        has_not_moved = False
-                        self._is_black_turn = True
-                        round = False
-                    i += 1
-            if not round:
-                self.check_board()
+                self.take_turn("O")
+
+
+            if not self._round:
+                win_conditions = self.check_board()
+                if win_conditions["x_win"] and win_conditions["o_win"]:
+                    self.win.setFill("pink")
+                    print("---THE GAME HAS ENDED---")
+                    print("It's a draw!")
+                    game_running = False
+                elif win_conditions["x_win"]:
+                    self.win.setFill("pink")
+                    print("---THE GAME HAS ENDED---")
+                    print("Black wins!")
+                    game_running = False
+                elif win_conditions["o_win"]:
+                    self.win.setFill("pink")
+                    print("---THE GAME HAS ENDED---")
+                    print("White wins!")
+                    game_running = False
+        self.win.getMouse()
+        self.win.close()
+
+    def take_turn(self, color: str):
+        moves = []
+        click = self.win.getMouse()
+        row = int(click.getY())
+        col = int(click.getX())
+        while self.board.grid[row][col] == color:
+            moves = self.find_moves(row, col)
+            self.select_piece(row, col, moves)
+            x_selected = (row, col)
+            click = self.win.getMouse()
+            self.unselect_piece(row, col, moves)
+            row = int(click.getY())
+            col = int(click.getX())
+        possible_move = (row, col)
+        i = 0
+        has_not_moved = True
+        while i < len(moves) and has_not_moved: 
+            if possible_move == moves[i]:
+                self.board.move_piece(x_selected[0], x_selected[1], moves[i][0], moves[i][1])
+                self.show_move()
+                has_not_moved = False
+                self._is_black_turn = not self._is_black_turn
+                if color == "O":
+                    self._round = False
+            i += 1
         
     def check_board(self):
         x_win = False
@@ -499,8 +506,9 @@ class LinesOfAction:
             x_win = True
         if len(o_visited) == o_count:
             o_win = True
-        print(x_win)
-        print(o_win)
+        return {"x_win": x_win,
+                "o_win": o_win}
+        
 
     def dfs(self, vertex: tuple, visited: list):
         if vertex not in visited:
@@ -510,7 +518,6 @@ class LinesOfAction:
                 for j in box.col_range():
                     if self.board.grid[i][j] == self.board.grid[vertex[0]][vertex[1]]:
                         self.dfs((i, j), visited)
-
         
 
 DIM = 8
