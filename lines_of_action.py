@@ -3,8 +3,7 @@ __author__ = "Ellen Whalen"
 import graphics as g
 from box import Box
 
-class Board:
-    
+class Board: 
     def __init__(self):
         self._grid = []
         for i in range(DIM):
@@ -351,8 +350,10 @@ class LinesOfAction:
         self.show_possible_moves(moves)
         self.win.update()
     
-    def unselect_piece(self, row: int, col: int, moves: list[tuple]):
+    def deselect_piece(self, row: int, col: int, moves: list[tuple]):
         """Deselects a piece which has previously been selected."""
+        """
+        # Turns the square of the selected piece back to the normal shade of green.
         rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
         rect.setFill("mediumseagreen")
         rect.draw(self.win)
@@ -361,14 +362,18 @@ class LinesOfAction:
             color = "black"
         else:
             color = "white"
+        
+        # Redraws the piece on top of the square.
         circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
         circle.setFill(color)
         circle.draw(self.win)
+"""
+        # Redraws the entire board.
         length = len(moves)
         for i in range(length):
             row = moves[i][0]
             col = moves[i][1]
-            rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row)) # could change these to like. grayed out circles
+            rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
             rect.setFill("mediumseagreen")
             rect.draw(self.win)
             if self.board.grid[row][col] != "":
@@ -413,6 +418,7 @@ class LinesOfAction:
                 self.take_turn("O")
 
             if not self._round:
+                # Every time a round ends, it'll check to see if either/both win conditions are met.
                 win_conditions = self.check_board()
                 if win_conditions["x_win"] and win_conditions["o_win"]:
                     print("---THE GAME HAS ENDED---")
@@ -430,7 +436,7 @@ class LinesOfAction:
         self.win.close()
 
     def take_turn(self, color: str):
-        """Allows one turn to be taken for either color of piece."""
+        """Allows one turn to be taken for either color of a piece."""
         moves = []
         click = self.win.getMouse()
         row = int(click.getY())
@@ -440,7 +446,7 @@ class LinesOfAction:
             self.select_piece(row, col, moves)
             x_selected = (row, col)
             click = self.win.getMouse()
-            self.unselect_piece(row, col, moves)
+            self.deselect_piece(row, col, moves)
             row = int(click.getY())
             col = int(click.getX())
         possible_move = (row, col)
@@ -464,34 +470,17 @@ class LinesOfAction:
         o_count = self.board.count_total("O")
 
         # search for an x and an o on the board. we only need to get the first two we come upon.
-        i = 0
-        searching = True
-        while i < DIM and searching:
-            j = 0
-            while j < DIM and searching:
-                if self.board.grid[i][j] == "X":
-                    x_vertex = (i, j)
-                    searching = False
-                j += 1
-            i += 1
-        
-        i = 0
-        searching = True
-        while i < DIM and searching:
-            j = 0
-            while j < DIM and searching:
-                if self.board.grid[i][j] == "O":
-                    o_vertex = (i, j)
-                    searching = False
-                j += 1
-            i += 1
+        x_vertex = self.simple_search("X")
+        o_vertex = self.simple_search("O")
 
         x_visited = []
         o_visited = []
+        # dfs based on a starting vertex given by simple_search
         self.dfs(x_vertex, x_visited)
         self.dfs(o_vertex, o_visited)
         print(x_visited)
         print(o_visited)
+        
 
         if len(x_visited) == x_count:
             x_win = True
@@ -500,6 +489,17 @@ class LinesOfAction:
         return {"x_win": x_win,
                 "o_win": o_win}
         
+    def simple_search(self, color):
+        """Returns the first piece of some particular color that the loop comes upon."""
+        i = 0
+        while i < DIM:
+            j = 0
+            while j < DIM:
+                if self.board.grid[i][j] == color:
+                    vertex = (i, j)
+                    return vertex
+                j += 1
+            i += 1
 
     def dfs(self, vertex: tuple, visited: list):
         """Depth-first search for pieces of some particular color on the board."""
