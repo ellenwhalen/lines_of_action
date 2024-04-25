@@ -72,19 +72,11 @@ class Board:
         self._grid[row][col] = ""
         self._grid[new_row][new_col] = color_type
     
-    def count_x(self) -> int:
+    def count_total(self, color: str) -> int:
         count = 0
         for i in range(DIM):
             for j in range(DIM):
-                if self.grid[j][i] == "X":
-                    count += 1
-        return count
-    
-    def count_o(self) -> int:
-        count = 0
-        for i in range(DIM):
-            for j in range(DIM):
-                if self.grid[j][i] == "O":
+                if self.grid[j][i] == color:
                     count += 1
         return count
 
@@ -409,9 +401,9 @@ class LinesOfAction:
         self.win.update()
 
     def play_game(self):
+        """Controls the gameplay, letting the correct pieces move and calling checks for wins."""
         self.draw_board()
         game_running = True
-        #moves = []
         while game_running:
             self._round = True
             if self.is_black_turn:
@@ -420,21 +412,17 @@ class LinesOfAction:
             if not self.is_black_turn:
                 self.take_turn("O")
 
-
             if not self._round:
                 win_conditions = self.check_board()
                 if win_conditions["x_win"] and win_conditions["o_win"]:
-                    self.win.setFill("pink")
                     print("---THE GAME HAS ENDED---")
                     print("It's a draw!")
                     game_running = False
                 elif win_conditions["x_win"]:
-                    self.win.setFill("pink")
                     print("---THE GAME HAS ENDED---")
                     print("Black wins!")
                     game_running = False
                 elif win_conditions["o_win"]:
-                    self.win.setFill("pink")
                     print("---THE GAME HAS ENDED---")
                     print("White wins!")
                     game_running = False
@@ -442,6 +430,7 @@ class LinesOfAction:
         self.win.close()
 
     def take_turn(self, color: str):
+        """Allows one turn to be taken for either color of piece."""
         moves = []
         click = self.win.getMouse()
         row = int(click.getY())
@@ -468,11 +457,13 @@ class LinesOfAction:
             i += 1
         
     def check_board(self):
+        """Checks the board to see if any end condition is met, then returns whether there is a win for black and/or white."""
         x_win = False
         o_win = False
-        x_count = self.board.count_x()
-        o_count = self.board.count_o()
-        # search for an x and an o on the board. we only need to search for two.
+        x_count = self.board.count_total("X")
+        o_count = self.board.count_total("O")
+
+        # search for an x and an o on the board. we only need to get the first two we come upon.
         i = 0
         searching = True
         while i < DIM and searching:
@@ -511,24 +502,20 @@ class LinesOfAction:
         
 
     def dfs(self, vertex: tuple, visited: list):
+        """Depth-first search for pieces of some particular color on the board."""
         if vertex not in visited:
             visited.append(vertex)
             box = Box(vertex[0], vertex[1], DIM)
             for i in box.row_range():
                 for j in box.col_range():
+                    # self.board.grid[vertex[0]][vertex[1]] returns the color of the piece we want to run dfs on.
                     if self.board.grid[i][j] == self.board.grid[vertex[0]][vertex[1]]:
                         self.dfs((i, j), visited)
         
 
 DIM = 8
 
-my_board = Board()
-print(my_board.count_pieces(4, 0))
-
 my_game = LinesOfAction()
-#visited = []
-#my_game.dfs((1, 0), visited)
-#print(visited)
 my_game.play_game()
 my_game.win.getMouse()
 my_game.win.close()
