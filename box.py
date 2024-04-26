@@ -1,4 +1,9 @@
+__author__ = "Ellen Whalen"
+"""Box class."""
+# This is my exact Box class that I used in segregation_simulation, so I didn't write any tests for it here.
+
 class Box:
+    """Calculates the iterable "box" around an entry in a 2d list."""
     _min_row = int
     _max_row = int
     _min_col = int
