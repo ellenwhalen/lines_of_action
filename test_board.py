@@ -1,5 +1,5 @@
 __author__ = "Ellen Whalen"
-
+"""Tests for the board class."""
 
 import pytest
 from board import Board
