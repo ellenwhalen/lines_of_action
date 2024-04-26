@@ -1,4 +1,6 @@
+
 __author__ = "Ellen Whalen"
+"""Class for the game functions of Lines Of Action."""
 
 import graphics as g
 from box import Box
@@ -7,7 +9,6 @@ from board import Board
 class LinesOfAction:
     """An object which runs one game of Lines of Action, finding and executing moves, controlling graphics, 
     and checking for wins."""
-    _is_black_turn: bool
     _round: bool
     _board: Board
     _win: g.GraphWin
@@ -233,8 +234,6 @@ class LinesOfAction:
         # dfs based on a starting vertex given by simple_search
         self.dfs(x_vertex, x_visited)
         self.dfs(o_vertex, o_visited)
-        print(x_visited)
-        print(o_visited)
         
 
         if len(x_visited) == x_count:
@@ -258,6 +257,8 @@ class LinesOfAction:
 
     def dfs(self, vertex: tuple, visited: list):
         """Depth-first search for pieces of some particular color on the board."""
+        if self.board.grid[vertex[0]][vertex[1]] == "":
+            raise ValueError("Can't search on a piece that doesn't exist.")
         if vertex not in visited:
             visited.append(vertex)
             box = Box(vertex[0], vertex[1], DIM)
@@ -270,7 +271,12 @@ class LinesOfAction:
 
 DIM = 8     # I'm using this as a constant not because it should change, but because it's easier to read.
 
+# !!!!!!YOU NEED TO COMMENT OUT THE FOLLOWING TWO LINES FOR THE TESTS ON THIS FILE TO RUN!!!!!!
+"""
 my_game = LinesOfAction()
 my_game.play_game()
-my_game.win.getMouse()
-my_game.win.close()
+"""
+my_game = LinesOfAction()
+bla = []
+my_game.dfs((1, 0), bla)
+print(bla)
