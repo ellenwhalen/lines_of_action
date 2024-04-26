@@ -4,6 +4,8 @@ import graphics as g
 from box import Box
 
 class Board: 
+    """A list representing the game board with black pieces as "X"'s and white pieces as "O"'s 
+    which can run some basic operations on itself."""
     def __init__(self):
         self._grid = []
         for i in range(DIM):
@@ -22,10 +24,13 @@ class Board:
         """Counts the number of pieces on a given piece's row, column, and both diagonals."""
         if self.grid[row][col] == "":
             raise ValueError("count_pieces should not be run on an empty square.")
+        
+        # initializing counts, a dict that will hold all of the counts
         counts = {"row_count": 0,
                  "col_count": 0,
                  "neg_diag_count": 0,
                  "pos_diag_count": 0}
+        
         i = 0
         while i < DIM:
             if self.grid[row][i] != "":
@@ -79,7 +84,202 @@ class Board:
                     count += 1
         return count
 
+    def find_moves(self, row: int, col: int) -> list[tuple]:
+        """Finds possible moves for a piece and returns them as a list of tuples (row, col)."""
+        color = self.grid[row][col]
+        if color == "X":
+            opponent = "O"
+        else:
+            opponent = "X"
+        counts = self.count_pieces(row, col)
+
+        moves = []
+        moves += self.find_row_moves(row, col, color, opponent, counts["row_count"])
+        moves += self.find_col_moves(row, col, color, opponent, counts["col_count"])
+        moves += self.find_neg_diag_moves(row, col, color, opponent, counts["neg_diag_count"])
+        moves += self.find_pos_diag_moves(row, col, color, opponent, counts["pos_diag_count"])
+        return moves
+    
+    def find_row_moves(self, row: int, col: int, color: str, opponent: str, count: int) -> list[tuple]:
+        """Finds possible moves for a piece along its row."""
+        moves = []
+
+        can_move = True
+        i = 1
+        col_check = col + 1
+        while col_check < DIM and i < count and can_move:
+            if self.grid[row][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check += 1
+
+        # LOTS of logic that gets repeated in all of these "find_[something]_moves" methods, so i'll explain it once here.
+        # if the loop was able to get all the way to the distance the piece would need to travel,
+        if i == count:    
+            # if the reason the while loop ended WASN'T because col_check overspills bounds,
+            if col_check < DIM:     
+                # if the spot the piece would land on is the same color as itself,
+                if self.grid[row][col_check] == color:
+                    can_move = False    # the piece can't move there.
+            # otherwise if col_check DID overspill bounds,
+            else:   
+                can_move = False    # the piece can't move there. (obviously)
+            # if the piece can STILL move to that space,
+            if can_move:
+                # add that move to the array of possible moves.
+                moves += [(row, col_check)]
+        
+        can_move = True
+        i = 1
+        col_check = col - 1
+        while col_check > 0 and i < count and can_move:
+            if self.grid[row][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check -= 1
+
+        if i == count:
+            if col_check >= 0:
+                if self.grid[row][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move:
+                moves += [(row, col_check)]
+        return moves
+    
+    def find_col_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        """Finds possible moves for a piece along its column."""
+        moves = []
+        can_move = True
+        i = 1
+        row_check = row + 1
+        while row_check < DIM and i < count and can_move:
+            if self.grid[row_check][col] == opponent:
+                can_move = False
+            i += 1
+            row_check += 1
+
+        if i == count:
+            if row_check < DIM:
+                if self.grid[row_check][col] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move:
+                moves += [(row_check, col)]
+        
+        can_move = True
+        i = 1
+        row_check = row - 1
+        while row_check > 0 and i < count and can_move:
+            if self.grid[row_check][col] == opponent:
+                can_move = False
+            i += 1
+            row_check -= 1
+        
+        if i == count:
+            if row_check >= 0:
+                if self.grid[row_check][col] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move:
+                moves += [(row_check, col)]
+        return moves
+    
+    def find_neg_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        """Finds possible moves for a piece along its diagonal going from the upper left to lower right."""
+        moves = []
+        can_move = True
+        i = 1
+        col_check = col + 1
+        row_check = row + 1
+        while col_check < DIM and row_check < DIM and i < count and can_move:
+            if self.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check += 1
+            row_check += 1
+
+        if i == count:
+            if col_check < DIM and row_check < DIM:
+                if self.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move:
+                moves += [(row_check, col_check)]
+        
+        can_move = True
+        i = 1
+        col_check = col - 1
+        row_check = row - 1
+        while col_check > 0 and row_check > 0 and i < count and can_move:
+            if self.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check -= 1
+            row_check -= 1
+        
+        if i == count:
+            if col_check >= 0 and row_check >= 0:
+                if self.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move:
+                moves += [(row_check, col_check)]
+        return moves
+    
+    def find_pos_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
+        """Finds possible moves for a piece along the diagonal going from its lower left to upper right."""
+        moves = []
+        can_move = True
+        i = 1
+        col_check = col + 1
+        row_check = row - 1
+        while col_check < DIM and row_check > 0 and i < count and can_move:
+            if self.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check += 1
+            row_check -= 1
+
+        if i == count:
+            if col_check < DIM and row_check >= 0:
+                if self.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move:
+                moves += [(row_check, col_check)]
+        
+        can_move = True
+        i = 1
+        col_check = col - 1
+        row_check = row + 1
+        while col_check > 0 and row_check < DIM and i < count and can_move:
+            if self.grid[row_check][col_check] == opponent:
+                can_move = False
+            i += 1
+            col_check -= 1
+            row_check += 1
+        
+        if i == count:
+            if col_check >= 0 and row_check < DIM:
+                if self.grid[row_check][col_check] == color:
+                    can_move = False
+            else:
+                can_move = False
+            if can_move:
+                moves += [(row_check, col_check)]
+        return moves
+
+
 class LinesOfAction:
+    """An object which runs one game of Lines of Action, finding and executing moves, controlling graphics, 
+    and checking for wins."""
     _is_black_turn: bool
     _round: bool
     _board: Board
@@ -107,11 +307,13 @@ class LinesOfAction:
     
     def draw_board(self):
         """Draws the board in its initial state."""
+        # Drawing all of the gridlines
         for i in range(DIM):
             line = g.Line(g.Point(0, i), g.Point(DIM, i))
             line.draw(self.win)
             line = g.Line(g.Point(i, 0), g.Point(i, DIM))
             line.draw(self.win)
+        # Drawing all of the pieces
         for i in range(DIM):
             for j in range(DIM):
                 if self.board.grid[i][j] == "X":
@@ -124,205 +326,17 @@ class LinesOfAction:
                     circle.draw(self.win)
         self.win.update()
 
-    def find_moves(self, row: int, col: int) -> list[tuple]:
-        """Finds possible moves for a piece and returns them as a list of tuples (row, col)."""
-        color = self.board.grid[row][col]
-        if color == "X":
-            opponent = "O"
-        else:
-            opponent = "X"
-        counts = self.board.count_pieces(row, col)
-        moves = []
-        moves += self.find_row_moves(row, col, color, opponent, counts["row_count"])
-        moves += self.find_col_moves(row, col, color, opponent, counts["col_count"])
-        moves += self.find_neg_diag_moves(row, col, color, opponent, counts["neg_diag_count"])
-        moves += self.find_pos_diag_moves(row, col, color, opponent, counts["pos_diag_count"])
-        return moves
-    
-    def find_row_moves(self, row: int, col: int, color: str, opponent: str, count: int) -> list[tuple]:
-        """Finds possible moves for a piece along its row."""
-        moves = []
-
-        can_move = True
-        i = 1
-        col_check = col + 1
-        while col_check < DIM and i < count and can_move:
-            if self.board.grid[row][col_check] == opponent:
-                can_move = False
-            i += 1
-            col_check += 1
-
-        # lots of logic that gets repeated, so i'll explain it once here.
-        # if the loop was able to get all the way to the distance the piece would need to travel,
-        if i == count:    
-            # if the reason the while loop ended WASN'T because col_check overspills bounds,
-            if col_check < DIM:     
-                # if the spot the piece would land on is the same color as itself,
-                if self.board.grid[row][col_check] == color:
-                    can_move = False    # the piece can't move there.
-            # otherwise if col_check DID overspill bounds,
-            else:   
-                can_move = False    # the piece can't move there. (obviously)
-            # if the piece can STILL move,
-            if can_move:
-                moves += [(row, col_check)]
-        
-        can_move = True
-        i = 1
-        col_check = col - 1
-        while col_check > 0 and i < count and can_move:
-            if self.board.grid[row][col_check] == opponent:
-                can_move = False
-            i += 1
-            col_check -= 1
-
-        if i == count:
-            if col_check >= 0:
-                if self.board.grid[row][col_check] == color:
-                    can_move = False
-            else:
-                can_move = False
-            if can_move:
-                moves += [(row, col_check)]
-        return moves
-    
-    def find_col_moves(self, row: int, col: int, color: str, opponent: str, count: int):
-        """Finds possible moves for a piece along its column."""
-        moves = []
-        can_move = True
-        i = 1
-        row_check = row + 1
-        while row_check < DIM and i < count and can_move:
-            if self.board.grid[row_check][col] == opponent:
-                can_move = False
-            i += 1
-            row_check += 1
-
-        if i == count:
-            if row_check < DIM:
-                if self.board.grid[row_check][col] == color:
-                    can_move = False
-            else:
-                can_move = False
-            if can_move:
-                moves += [(row_check, col)]
-        
-        can_move = True
-        i = 1
-        row_check = row - 1
-        while row_check > 0 and i < count and can_move:
-            if self.board.grid[row_check][col] == opponent:
-                can_move = False
-            i += 1
-            row_check -= 1
-        
-        if i == count:
-            if row_check >= 0:
-                if self.board.grid[row_check][col] == color:
-                    can_move = False
-            else:
-                can_move = False
-            if can_move:
-                moves += [(row_check, col)]
-        return moves
-    
-    def find_neg_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
-        """Finds possible moves for a piece along its diagonal going from the upper left to lower right."""
-        moves = []
-        can_move = True
-        i = 1
-        col_check = col + 1
-        row_check = row + 1
-        while col_check < DIM and row_check < DIM and i < count and can_move:
-            if self.board.grid[row_check][col_check] == opponent:
-                can_move = False
-            i += 1
-            col_check += 1
-            row_check += 1
-
-        if i == count:
-            if col_check < DIM and row_check < DIM:
-                if self.board.grid[row_check][col_check] == color:
-                    can_move = False
-            else:
-                can_move = False
-            if can_move:
-                moves += [(row_check, col_check)]
-        
-        can_move = True
-        i = 1
-        col_check = col - 1
-        row_check = row - 1
-        while col_check > 0 and row_check > 0 and i < count and can_move:
-            if self.board.grid[row_check][col_check] == opponent:
-                can_move = False
-            i += 1
-            col_check -= 1
-            row_check -= 1
-        
-        if i == count:
-            if col_check >= 0 and row_check >= 0:
-                if self.board.grid[row_check][col_check] == color:
-                    can_move = False
-            else:
-                can_move = False
-            if can_move:
-                moves += [(row_check, col_check)]
-        return moves
-    
-    def find_pos_diag_moves(self, row: int, col: int, color: str, opponent: str, count: int):
-        """Finds possible moves for a piece along the diagonal going from its lower left to upper right."""
-        moves = []
-        can_move = True
-        i = 1
-        col_check = col + 1
-        row_check = row - 1
-        while col_check < DIM and row_check > 0 and i < count and can_move:
-            if self.board.grid[row_check][col_check] == opponent:
-                can_move = False
-            i += 1
-            col_check += 1
-            row_check -= 1
-
-        if i == count:
-            if col_check < DIM and row_check >= 0:
-                if self.board.grid[row_check][col_check] == color:
-                    can_move = False
-            else:
-                can_move = False
-            if can_move:
-                moves += [(row_check, col_check)]
-        
-        can_move = True
-        i = 1
-        col_check = col - 1
-        row_check = row + 1
-        while col_check > 0 and row_check < DIM and i < count and can_move:
-            if self.board.grid[row_check][col_check] == opponent:
-                can_move = False
-            i += 1
-            col_check -= 1
-            row_check += 1
-        
-        if i == count:
-            if col_check >= 0 and row_check < DIM:
-                if self.board.grid[row_check][col_check] == color:
-                    can_move = False
-            else:
-                can_move = False
-            if can_move:
-                moves += [(row_check, col_check)]
-        return moves
-
     def show_possible_moves(self, moves: list[tuple]):
         """Displays possible moves as light green squares."""
         length = len(moves)
         for i in range(length):
             row = moves[i][0]
             col = moves[i][1]
+            # Changing background colors
             rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
             rect.setFill("greenyellow")
             rect.draw(self.win)
+            # Redrawing pieces on top
             if self.board.grid[row][col] != "":
                 color_type = self.board.grid[row][col]
                 if color_type == "X":
@@ -335,10 +349,13 @@ class LinesOfAction:
         self.win.update()
     
     def select_piece(self, row: int, col: int, moves: list[tuple]):
-        """Selects a piece, calculates its possible moves and displays them."""
+        """Selects a piece, checks its possible moves and displays them."""
+        # Changes the background behind the selected piece to a lighter shade of green.
         rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
         rect.setFill("palegreen")
         rect.draw(self.win)
+
+        # Redraws the piece on top of it.
         color_type = self.board.grid[row][col]
         if color_type == "X":
             color = "black"
@@ -347,12 +364,13 @@ class LinesOfAction:
         circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
         circle.setFill(color)
         circle.draw(self.win)
+
         self.show_possible_moves(moves)
         self.win.update()
     
     def deselect_piece(self, row: int, col: int, moves: list[tuple]):
         """Deselects a piece which has previously been selected."""
-        """
+
         # Turns the square of the selected piece back to the normal shade of green.
         rect = g.Rectangle(g.Point(col + 1, row + 1), g.Point(col, row))
         rect.setFill("mediumseagreen")
@@ -367,8 +385,8 @@ class LinesOfAction:
         circle = g.Circle(g.Point(col + 0.5, row + 0.5), 0.25)
         circle.setFill(color)
         circle.draw(self.win)
-"""
-        # Redraws the entire board.
+
+        # Redraws the rest of the board.
         length = len(moves)
         for i in range(length):
             row = moves[i][0]
@@ -413,12 +431,11 @@ class LinesOfAction:
             self._round = True
             if self.is_black_turn:
                 self.take_turn("X")
-
             if not self.is_black_turn:
                 self.take_turn("O")
 
             if not self._round:
-                # Every time a round ends, it'll check to see if either/both win conditions are met.
+                # Every time a round ends, check to see if either/both win conditions are met and respond accordingly.
                 win_conditions = self.check_board()
                 if win_conditions["x_win"] and win_conditions["o_win"]:
                     print("---THE GAME HAS ENDED---")
@@ -439,16 +456,25 @@ class LinesOfAction:
         """Allows one turn to be taken for either color of a piece."""
         moves = []
         click = self.win.getMouse()
+        # Getting the row and column info from the getMouse object (click)
         row = int(click.getY())
         col = int(click.getX())
+        # Functions as an if statement, but needs to be a while because the player can select one piece,
+        # then another piece, etc
         while self.board.grid[row][col] == color:
-            moves = self.find_moves(row, col)
+            # Calculating possible moves
+            moves = self.board.find_moves(row, col)
+            # Selecting the piece based on said moves
             self.select_piece(row, col, moves)
             x_selected = (row, col)
+            # Waiting for the user's next click
             click = self.win.getMouse()
+            # Deselecting the piece
             self.deselect_piece(row, col, moves)
             row = int(click.getY())
             col = int(click.getX())
+
+        # Checking the possible move (user's click) against all possible moves
         possible_move = (row, col)
         i = 0
         has_not_moved = True
@@ -457,8 +483,10 @@ class LinesOfAction:
                 self.board.move_piece(x_selected[0], x_selected[1], moves[i][0], moves[i][1])
                 self.show_move()
                 has_not_moved = False
+                # Inverting the turn
                 self._is_black_turn = not self._is_black_turn
                 if color == "O":
+                    # If it was white's turn, the round is now over since white has moved.
                     self._round = False
             i += 1
         
@@ -490,7 +518,7 @@ class LinesOfAction:
                 "o_win": o_win}
         
     def simple_search(self, color):
-        """Returns the first piece of some particular color that the loop comes upon."""
+        """Searches the board until it finds the right color piece."""
         i = 0
         while i < DIM:
             j = 0
@@ -513,7 +541,7 @@ class LinesOfAction:
                         self.dfs((i, j), visited)
         
 
-DIM = 8
+DIM = 8     # I'm using this as a constant not because it should change, but because it's easier to read.
 
 my_game = LinesOfAction()
 my_game.play_game()
