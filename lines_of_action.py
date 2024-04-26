@@ -272,11 +272,5 @@ class LinesOfAction:
 DIM = 8     # I'm using this as a constant not because it should change, but because it's easier to read.
 
 # !!!!!!YOU NEED TO COMMENT OUT THE FOLLOWING TWO LINES FOR THE TESTS ON THIS FILE TO RUN!!!!!!
-"""
 my_game = LinesOfAction()
 my_game.play_game()
-"""
-my_game = LinesOfAction()
-bla = []
-my_game.dfs((1, 0), bla)
-print(bla)
