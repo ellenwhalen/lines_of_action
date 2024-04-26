@@ -1,3 +1,5 @@
+__author__ = "Ellen Whalen"
+
 DIM = 8
 
 class Board: 
